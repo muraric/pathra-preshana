@@ -3,19 +3,29 @@ Flask web application for Pathra Preshana email sender
 """
 
 import os
-from flask import Flask, render_template, request, jsonify, send_file, session
+from flask import Flask, render_template, request, jsonify, send_file, session, redirect, url_for
 from werkzeug.utils import secure_filename
 from dotenv import load_dotenv
 
 from pathra_preshana.email_sender import EmailSender
 from pathra_preshana.file_reader import FileReader
+from pathra_preshana.auth import (
+    login_required, 
+    verify_google_token, 
+    init_auth as init_auth_module,
+    is_authenticated,
+    get_current_user
+)
 
 # Load environment variables
 load_dotenv()
 
 app = Flask(__name__, template_folder='../templates')
-app.secret_key = os.urandom(24)
+app.secret_key = os.environ.get('SECRET_KEY', os.urandom(24))
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
+
+# Initialize authentication
+init_auth_module(app)
 
 ALLOWED_EXTENSIONS = {'html', 'csv'}
 
@@ -47,7 +57,10 @@ def get_recipient_files():
 @app.route('/')
 def index():
     """Main page with UI"""
-    return render_template('web_ui.html')
+    user = get_current_user()
+    if not user:
+        return redirect(url_for('login'))
+    return render_template('web_ui.html', user=user)
 
 
 @app.route('/api/templates')
@@ -148,7 +161,66 @@ def get_recipients_data():
         return jsonify({'error': str(e)}), 500
 
 
+@app.route('/login')
+def login():
+    """Login page"""
+    client_id = os.getenv('GOOGLE_CLIENT_ID', '')
+    return render_template('login.html', google_client_id=client_id)
+
+@app.route('/logout')
+def logout():
+    """Logout and clear session"""
+    session.clear()
+    return jsonify({'success': True, 'message': 'Logged out successfully'})
+
+@app.route('/api/auth/google', methods=['GET', 'POST'])
+def google_auth():
+    """Handle Google OAuth authentication"""
+    if request.method == 'GET':
+        # This will be handled by client-side Google Sign-In
+        # Return the page that handles Google authentication
+        return redirect('/login')
+
+@app.route('/api/auth/google/callback', methods=['POST'])
+def google_auth_callback():
+    """Handle Google OAuth callback"""
+    try:
+        data = request.json
+        token = data.get('credential')  # Google ID token
+        
+        if not token:
+            return jsonify({'error': 'No credential provided'}), 400
+        
+        # Verify the Google token
+        user_info = verify_google_token(token)
+        
+        if user_info:
+            # Store user info in session
+            session['user_email'] = user_info['email']
+            session['user_name'] = user_info['name']
+            session['user_picture'] = user_info.get('picture', '')
+            
+            return jsonify({
+                'success': True,
+                'user': user_info
+            })
+        else:
+            return jsonify({'error': 'Invalid token'}), 401
+            
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/auth/status')
+def auth_status():
+    """Check authentication status"""
+    user = get_current_user()
+    return jsonify({
+        'authenticated': is_authenticated(),
+        'user': user
+    })
+
 @app.route('/api/send', methods=['POST'])
+@login_required
 def send_emails():
     """Send emails to recipients"""
     data = request.json

@@ -223,6 +223,14 @@
         <div class="header">
             <h1>📧 Pathra Preshana</h1>
             <p>Automated Email Sending System</p>
+            {% if user %}
+            <div style="margin-top: 15px;">
+                <span>{{ user.name or user.email }}</span>
+                <button onclick="logout()" style="margin-left: 15px; padding: 8px 20px; background: rgba(255,255,255,0.2); border: 2px solid white; border-radius: 5px; color: white; cursor: pointer;">
+                    Logout
+                </button>
+            </div>
+            {% endif %}
         </div>
 
         <div class="content">
@@ -471,6 +479,19 @@
             setTimeout(() => {
                 statusDiv.style.display = 'none';
             }, 5000);
+        }
+
+        // Logout function
+        function logout() {
+            fetch('/logout')
+                .then(response => response.json())
+                .then(data => {
+                    window.location.href = '/login';
+                })
+                .catch(error => {
+                    console.error('Logout error:', error);
+                    window.location.href = '/login';
+                });
         }
     </script>
 </body>
