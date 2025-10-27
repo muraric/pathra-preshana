@@ -149,27 +149,6 @@
     </script>
     <script src="https://accounts.google.com/gsi/client" async defer></script>
     <script>
-        window.onload = function() {
-            // Wait for Google Identity Services to load
-            if (typeof google !== 'undefined') {
-                google.accounts.id.initialize({
-                    client_id: window.GOOGLE_CLIENT_ID,
-                    callback: handleCredentialResponse
-                });
-            
-            google.accounts.id.renderButton(
-                document.getElementById('google-login-btn'),
-                {
-                    theme: 'outline',
-                    size: 'large',
-                    type: 'standard',
-                    text: 'signin_with',
-                    shape: 'rectangular',
-                    logo_alignment: 'left'
-                }
-            );
-        };
-
         function handleCredentialResponse(response) {
             // Send the credential to our backend
             fetch('/api/auth/google/callback', {
@@ -199,6 +178,34 @@
                 errorDiv.classList.add('show');
             });
         }
+
+        function initializeGoogleSignIn() {
+            if (typeof google !== 'undefined' && google.accounts) {
+                google.accounts.id.initialize({
+                    client_id: window.GOOGLE_CLIENT_ID,
+                    callback: handleCredentialResponse
+                });
+            
+                google.accounts.id.renderButton(
+                    document.getElementById('google-login-btn'),
+                    {
+                        theme: 'outline',
+                        size: 'large',
+                        type: 'standard',
+                        text: 'signin_with',
+                        shape: 'rectangular',
+                        logo_alignment: 'left'
+                    }
+                );
+            } else {
+                // Retry after a short delay if not loaded yet
+                setTimeout(initializeGoogleSignIn, 100);
+            }
+        }
+
+        window.onload = function() {
+            initializeGoogleSignIn();
+        };
 
         // Check for error in URL
         const urlParams = new URLSearchParams(window.location.search);
