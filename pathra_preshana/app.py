@@ -259,5 +259,9 @@ def send_emails():
 
 
 if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0', port=5001)
+    # Use PORT environment variable if available (for production)
+    port = int(os.environ.get('PORT', 5001))
+    # Debug should be False in production
+    debug = os.environ.get('DEBUG', 'False').lower() == 'true'
+    app.run(debug=debug, host='0.0.0.0', port=port)
 
