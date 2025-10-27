@@ -54,18 +54,6 @@ def verify_google_token(token):
 def init_auth(app):
     """Initialize authentication for Flask app"""
     app.secret_key = os.environ.get('SECRET_KEY', os.urandom(24))
-    
-    @app.route('/login')
-    def login():
-        """Login page"""
-        next_url = request.args.get('next', '/')
-        return redirect(url_for('static', filename='login.html', next=next_url))
-    
-    @app.route('/logout')
-    def logout():
-        """Logout and clear session"""
-        session.clear()
-        return redirect(url_for('index'))
 
 
 def is_authenticated():
