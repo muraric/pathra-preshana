@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pathra Preshana - Email Sender</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            opacity: 0.9;
+            font-size: 1.1em;
+        }
+
+        .content {
+            padding: 40px;
+        }
+
+        .section {
+            margin-bottom: 40px;
+        }
+
+        .section-title {
+            font-size: 1.5em;
+            color: #667eea;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1em;
+            transition: border-color 0.3s;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .file-upload-container {
+            border: 2px dashed #ccc;
+            border-radius: 8px;
+            padding: 30px;
+            text-align: center;
+            transition: border-color 0.3s;
+            cursor: pointer;
+        }
+
+        .file-upload-container:hover {
+            border-color: #667eea;
+        }
+
+        .file-upload-container.dragover {
+            border-color: #667eea;
+            background: #f0f4ff;
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        .upload-icon {
+            font-size: 3em;
+            color: #ccc;
+            margin-bottom: 10px;
+        }
+
+        .btn {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: #f0f0f0;
+            color: #333;
+        }
+
+        .btn-secondary:hover {
+            background: #e0e0e0;
+        }
+
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #218838;
+        }
+
+        .preview-container {
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 20px;
+            background: #f9f9f9;
+            min-height: 200px;
+            max-height: 500px;
+            overflow-y: auto;
+        }
+
+        .preview-container iframe {
+            width: 100%;
+            height: 400px;
+            border: none;
+        }
+
+        .status-message {
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .status-message.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .status-message.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .status-message.info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .grid {
+                grid-template-columns: 1fr;
+            }
+
+            .action-buttons {
+                flex-direction: column;
+            }
+
+            .btn {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📧 Pathra Preshana</h1>
+            <p>Automated Email Sending System</p>
+        </div>
+
+        <div class="content">
+            <!-- Status Messages -->
+            <div id="status-message" style="display: none;"></div>
+
+            <!-- File Upload Section -->
+            <div class="section">
+                <h2 class="section-title">📁 Upload Files</h2>
+                <div class="grid">
+                    <div>
+                        <h3>HTML Template</h3>
+                        <div class="file-upload-container" id="template-upload" onclick="document.getElementById('template-file').click()">
+                            <div class="upload-icon">📄</div>
+                            <p>Click to upload or drag & drop</p>
+                            <p style="color: #999; font-size: 0.9em;">Supports .html files</p>
+                            <input type="file" id="template-file" class="file-input" accept=".html" onchange="handleFileUpload(this, 'template')">
+                        </div>
+                    </div>
+
+                    <div>
+                        <h3>Recipients CSV</h3>
+                        <div class="file-upload-container" id="recipients-upload" onclick="document.getElementById('recipients-file').click()">
+                            <div class="upload-icon">📋</div>
+                            <p>Click to upload or drag & drop</p>
+                            <p style="color: #999; font-size: 0.9em;">Supports .csv files</p>
+                            <input type="file" id="recipients-file" class="file-input" accept=".csv" onchange="handleFileUpload(this, 'recipients')">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Selection Section -->
+            <div class="section">
+                <h2 class="section-title">⚙️ Configuration</h2>
+                
+                <div class="form-group">
+                    <label for="template-select">Select Template:</label>
+                    <select id="template-select" class="form-control">
+                        <option value="">-- Loading templates --</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="recipients-select">Select Recipients File:</label>
+                    <select id="recipients-select" class="form-control">
+                        <option value="">-- Loading recipients files --</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="email-subject">Email Subject:</label>
+                    <input type="text" id="email-subject" class="form-control" placeholder="Enter email subject..." value="Welcome to Pathra Preshana!">
+                </div>
+            </div>
+
+            <!-- Preview Section -->
+            <div class="section">
+                <h2 class="section-title">👁️ Preview Template</h2>
+                <div class="form-group">
+                    <button class="btn btn-secondary" onclick="loadPreview()">Load Preview</button>
+                </div>
+                <div id="preview-container" class="preview-container" style="display: none;">
+                    <!-- Preview will be loaded here -->
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="action-buttons">
+                <button class="btn btn-secondary" onclick="refreshLists()">🔄 Refresh Lists</button>
+                <button class="btn btn-primary" onclick="loadPreview()">👁️ Preview</button>
+                <button class="btn btn-success" onclick="sendEmails()">📧 Send Emails</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global state
+        let templates = [];
+        let recipients = [];
+
+        // Load templates and recipients on page load
+        window.onload = function() {
+            refreshLists();
+        };
+
+        // Handle file upload
+        function handleFileUpload(input, type) {
+            const file = input.files[0];
+            if (!file) return;
+
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('type', type);
+
+            showMessage('Uploading file...', 'info');
+
+            fetch('/api/upload', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    showMessage('Error: ' + data.error, 'error');
+                } else {
+                    showMessage('File uploaded successfully!', 'success');
+                    refreshLists();
+                }
+            })
+            .catch(error => {
+                showMessage('Error uploading file: ' + error, 'error');
+            });
+        }
+
+        // Refresh template and recipient lists
+        function refreshLists() {
+            // Load templates
+            fetch('/api/templates')
+                .then(response => response.json())
+                .then(data => {
+                    templates = data.templates;
+                    const select = document.getElementById('template-select');
+                    select.innerHTML = '<option value="">Select a template...</option>';
+                    templates.forEach(template => {
+                        const option = document.createElement('option');
+                        option.value = 'templates/' + template;
+                        option.textContent = template;
+                        select.appendChild(option);
+                    });
+                });
+
+            // Load recipients
+            fetch('/api/recipients')
+                .then(response => response.json())
+                .then(data => {
+                    recipients = data.recipients;
+                    const select = document.getElementById('recipients-select');
+                    select.innerHTML = '<option value="">Select recipients file...</option>';
+                    recipients.forEach(file => {
+                        const option = document.createElement('option');
+                        option.value = 'data/' + file;
+                        option.textContent = file;
+                        select.appendChild(option);
+                    });
+                });
+        }
+
+        // Load preview
+        function loadPreview() {
+            const templateSelect = document.getElementById('template-select');
+            const selectedTemplate = templateSelect.value;
+
+            if (!selectedTemplate) {
+                showMessage('Please select a template first', 'error');
+                return;
+            }
+
+            showMessage('Loading preview...', 'info');
+
+            fetch('/api/preview', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    template_path: selectedTemplate
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    showMessage('Error: ' + data.error, 'error');
+                } else {
+                    const previewContainer = document.getElementById('preview-container');
+                    previewContainer.style.display = 'block';
+                    previewContainer.innerHTML = data.html;
+                    showMessage('Preview loaded successfully!', 'success');
+                }
+            })
+            .catch(error => {
+                showMessage('Error loading preview: ' + error, 'error');
+            });
+        }
+
+        // Send emails
+        function sendEmails() {
+            const templateSelect = document.getElementById('template-select');
+            const recipientsSelect = document.getElementById('recipients-select');
+            const subjectInput = document.getElementById('email-subject');
+
+            const selectedTemplate = templateSelect.value;
+            const selectedRecipients = recipientsSelect.value;
+            const subject = subjectInput.value;
+
+            if (!selectedTemplate || !selectedRecipients) {
+                showMessage('Please select both template and recipients', 'error');
+                return;
+            }
+
+            if (!subject.trim()) {
+                showMessage('Please enter an email subject', 'error');
+                return;
+            }
+
+            if (!confirm('Are you sure you want to send emails?')) {
+                return;
+            }
+
+            showMessage('Sending emails...', 'info');
+
+            fetch('/api/send', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    template_path: selectedTemplate,
+                    recipients_path: selectedRecipients,
+                    subject: subject
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    showMessage('Error: ' + data.error, 'error');
+                } else {
+                    const results = data.results;
+                    const message = `✅ Successfully sent: ${results.success} emails\n❌ Failed: ${results.failed} emails`;
+                    alert(message);
+                    showMessage('Emails sent successfully!', 'success');
+                }
+            })
+            .catch(error => {
+                showMessage('Error sending emails: ' + error, 'error');
+            });
+        }
+
+        // Show status message
+        function showMessage(message, type) {
+            const statusDiv = document.getElementById('status-message');
+            statusDiv.textContent = message;
+            statusDiv.className = 'status-message ' + type;
+            statusDiv.style.display = 'block';
+
+            setTimeout(() => {
+                statusDiv.style.display = 'none';
+            }, 5000);
+        }
+    </script>
+</body>
+</html>
+
