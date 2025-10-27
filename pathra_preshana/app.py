@@ -165,6 +165,9 @@ def get_recipients_data():
 def login():
     """Login page"""
     client_id = os.getenv('GOOGLE_CLIENT_ID', '')
+    print(f"GOOGLE_CLIENT_ID from env: {'SET' if client_id else 'NOT SET'}")
+    if client_id:
+        print(f"Client ID: {client_id[:30]}...")
     return render_template('login.html', google_client_id=client_id)
 
 @app.route('/logout')
@@ -188,6 +191,8 @@ def google_auth_callback():
         data = request.json
         token = data.get('credential')  # Google ID token
         
+        print(f"Received token: {token[:50] if token else 'None'}...")
+        
         if not token:
             return jsonify({'error': 'No credential provided'}), 400
         
@@ -200,14 +205,20 @@ def google_auth_callback():
             session['user_name'] = user_info['name']
             session['user_picture'] = user_info.get('picture', '')
             
+            print(f"Authentication successful for: {user_info['email']}")
+            
             return jsonify({
                 'success': True,
                 'user': user_info
             })
         else:
+            print("Authentication failed: Invalid token or verification error")
             return jsonify({'error': 'Invalid token'}), 401
             
     except Exception as e:
+        print(f"Exception in google_auth_callback: {e}")
+        import traceback
+        traceback.print_exc()
         return jsonify({'error': str(e)}), 500
 
 @app.route('/api/auth/status')

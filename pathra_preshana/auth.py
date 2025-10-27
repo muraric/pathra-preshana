@@ -33,6 +33,13 @@ def verify_google_token(token):
         dict: User information (email, name, picture, etc.)
     """
     try:
+        # Check if GOOGLE_CLIENT_ID is set
+        if not GOOGLE_CLIENT_ID:
+            print("ERROR: GOOGLE_CLIENT_ID not set in environment")
+            return None
+        
+        print(f"Verifying token with Client ID: {GOOGLE_CLIENT_ID[:20]}...")
+        
         # Verify the token
         idinfo = id_token.verify_oauth2_token(
             token,
@@ -40,14 +47,24 @@ def verify_google_token(token):
             GOOGLE_CLIENT_ID
         )
         
+        print(f"Token verified successfully for: {idinfo.get('email')}")
+        
         return {
             'email': idinfo['email'],
             'name': idinfo.get('name', ''),
             'picture': idinfo.get('picture', ''),
             'sub': idinfo['sub']
         }
+    except ValueError as e:
+        print(f"Token verification failed - ValueError: {e}")
+        return None
     except GoogleAuthError as e:
-        print(f"Token verification failed: {e}")
+        print(f"Token verification failed - GoogleAuthError: {e}")
+        return None
+    except Exception as e:
+        print(f"Token verification failed - Unexpected error: {e}")
+        import traceback
+        traceback.print_exc()
         return None
 
 
